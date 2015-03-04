@@ -29,8 +29,9 @@ import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.LinearLayout;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaWebView;
@@ -156,8 +157,37 @@ public class SplashScreen extends CordovaPlugin {
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 if (splashDialog != null && splashDialog.isShowing()) {
-                    splashDialog.dismiss();
-                    splashDialog = null;
+                    if (preferences.getBoolean("FadeSplashScreen", false)) {
+                        AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
+                        double duration = preferences.getDouble("FadeSplashScreenDuration", 1.0);
+                        fadeOut.setDuration((int)(duration * 1000)); // config is in seconds, convert to ms
+
+                        View view = ((ViewGroup) splashDialog.getWindow().getDecorView().getRootView()).getChildAt(0);
+                        view.setBackgroundColor(Color.TRANSPARENT);
+                        view.setBackgroundResource(android.R.color.transparent);
+
+                        view.startAnimation(fadeOut);
+                        fadeOut.setAnimationListener(new Animation.AnimationListener() {
+                            @Override
+                            public void onAnimationStart(Animation animation) {
+
+                            }
+
+                            @Override
+                            public void onAnimationEnd(Animation animation) {
+                                splashDialog.dismiss();
+                                splashDialog = null;
+                            }
+
+                            @Override
+                            public void onAnimationRepeat(Animation animation) {
+
+                            }
+                        });
+                    } else {
+                        splashDialog.dismiss();
+                        splashDialog = null;
+                    }
                 }
             }
         });
